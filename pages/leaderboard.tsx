@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/router";
+import Link from "next/link";
 import Layout from "../components/Layout";
 import { useAppContext } from "../context/AppContext";
 import {
@@ -20,6 +22,7 @@ import {
   X,
   Star,
   Layers,
+  ArrowLeft,
 } from "lucide-react";
 
 interface CriteriaScores {
@@ -58,6 +61,8 @@ const CATEGORIES = [
 const STATUSES = ["All", "Winner", "Finalist", "Shortlisted"];
 
 export default function Leaderboard() {
+  const router = useRouter();
+  const eventParam = router.query.event as string | undefined;
   const { currentUser } = useAppContext();
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -312,6 +317,28 @@ export default function Leaderboard() {
             </div>
           </div>
         </div>
+
+        {/* Event Context Banner (when navigated from a specific hackathon) */}
+        {eventParam && (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 shadow-lg">
+            <div className="flex items-center gap-3.5">
+              <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-400 shrink-0">
+                <Trophy className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">Event-Specific Leaderboard</span>
+                <h3 className="text-base font-bold text-white">{eventParam}</h3>
+                <p className="text-xs text-gray-400">Viewing participant rankings and judge evaluations for this hackathon.</p>
+              </div>
+            </div>
+            <Link
+              href="/hackathons"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white text-xs font-semibold transition shrink-0 border border-gray-700"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" /> Back to Hackathons
+            </Link>
+          </div>
+        )}
 
         {/* Top 3 Podium Cards */}
         {topThree.length >= 3 && (
