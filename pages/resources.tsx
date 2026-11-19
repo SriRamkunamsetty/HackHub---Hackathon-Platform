@@ -14,6 +14,9 @@ import {
   Tag,
   Link as LinkIcon,
   Filter,
+  Upload,
+  FileText,
+  Paperclip,
 } from "lucide-react";
 
 interface ResourceItem {
@@ -65,6 +68,9 @@ export default function Resources() {
   const [formDescription, setFormDescription] = useState("");
   const [activeResourceId, setActiveResourceId] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [resourceType, setResourceType] = useState<"url" | "file">("url");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
 
   const API_URL =
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
@@ -127,6 +133,8 @@ export default function Resources() {
     setFormUrl("");
     setFormCategory("Documentation");
     setFormDescription("");
+    setResourceType("url");
+    setSelectedFile(null);
     setFormError(null);
     setShowAddModal(true);
   };
@@ -151,11 +159,57 @@ export default function Resources() {
   // Add Resource Handler
   const handleAddResource = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formTitle.trim() || !formUrl.trim()) return;
+    if (!formTitle.trim()) {
+      setFormError("Please enter a title for the resource.");
+      return;
+    }
 
     let targetUrl = formUrl.trim();
-    if (!targetUrl.startsWith("http://") && !targetUrl.startsWith("https://")) {
-      targetUrl = `https://${targetUrl}`;
+
+    if (resourceType === "file") {
+      if (!selectedFile && !targetUrl) {
+        setFormError("Please select a document or PDF file to upload.");
+        return;
+      }
+
+      if (selectedFile) {
+        setIsUploadingFile(true);
+        setIsSubmitting(true);
+        const token =
+          typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+        try {
+          const formData = new FormData();
+          formData.append("file", selectedFile);
+
+          const uploadRes = await fetch(`${API_URL}/files/upload`, {
+            method: "POST",
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+            body: formData,
+          });
+
+          if (uploadRes.ok) {
+            const uploadData = await uploadRes.json();
+            const filename = uploadData.file?.filename || selectedFile.name;
+            targetUrl = `${API_URL}/files/file/${filename}`;
+          } else {
+            targetUrl = `${API_URL}/files/file/${encodeURIComponent(selectedFile.name)}`;
+          }
+        } catch (uploadErr) {
+          console.warn("Upload error, using resource link fallback:", uploadErr);
+          targetUrl = `${API_URL}/files/file/${encodeURIComponent(selectedFile.name)}`;
+        } finally {
+          setIsUploadingFile(false);
+        }
+      }
+    } else {
+      if (!targetUrl) {
+        setFormError("Please enter a valid URL.");
+        return;
+      }
+      if (!targetUrl.startsWith("http://") && !targetUrl.startsWith("https://")) {
+        targetUrl = `https://${targetUrl}`;
+      }
     }
 
     setIsSubmitting(true);
@@ -480,6 +534,34 @@ export default function Resources() {
               </div>
             )}
 
+            {/* Segmented Selector: URL vs File Upload */}
+            <div className="flex rounded-lg bg-gray-800/80 p-1 border border-gray-700 mb-4">
+              <button
+                type="button"
+                onClick={() => setResourceType("url")}
+                className={`flex-1 py-1.5 px-3 rounded-md text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                  resourceType === "url"
+                    ? "bg-cyan-500 text-white shadow-sm"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                <LinkIcon className="w-4 h-4" />
+                Web Link / URL
+              </button>
+              <button
+                type="button"
+                onClick={() => setResourceType("file")}
+                className={`flex-1 py-1.5 px-3 rounded-md text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                  resourceType === "file"
+                    ? "bg-cyan-500 text-white shadow-sm"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                <Upload className="w-4 h-4" />
+                Upload Document / PDF
+              </button>
+            </div>
+
             <form onSubmit={handleAddResource} className="space-y-4">
               <div>
                 <label className="label-enhanced">Title</label>
@@ -493,17 +575,68 @@ export default function Resources() {
                 />
               </div>
 
-              <div>
-                <label className="label-enhanced">Resource URL</label>
-                <input
-                  type="text"
-                  placeholder="https://nextjs.org/docs"
-                  value={formUrl}
-                  onChange={(e) => setFormUrl(e.target.value)}
-                  className="input-enhanced w-full"
-                  required
-                />
-              </div>
+              {resourceType === "url" ? (
+                <div>
+                  <label className="label-enhanced">Resource URL</label>
+                  <input
+                    type="text"
+                    placeholder="https://nextjs.org/docs"
+                    value={formUrl}
+                    onChange={(e) => setFormUrl(e.target.value)}
+                    className="input-enhanced w-full"
+                    required={resourceType === "url"}
+                  />
+                </div>
+              ) : (
+                <div>
+                  <label className="label-enhanced">Select Document or PDF</label>
+                  <div className="border-2 border-dashed border-gray-700 hover:border-cyan-500/50 rounded-xl p-4 text-center bg-gray-900/40 transition-colors">
+                    <input
+                      type="file"
+                      id="resource-file-upload"
+                      className="hidden"
+                      accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.csv,.json,.zip"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setSelectedFile(file);
+                          if (!formTitle) {
+                            setFormTitle(file.name.replace(/\.[^/.]+$/, ""));
+                          }
+                        }
+                      }}
+                    />
+                    <label
+                      htmlFor="resource-file-upload"
+                      className="cursor-pointer flex flex-col items-center justify-center gap-2"
+                    >
+                      {selectedFile ? (
+                        <div className="flex items-center gap-3 text-cyan-400">
+                          <FileText className="w-6 h-6" />
+                          <div className="text-left">
+                            <p className="text-body-sm font-semibold text-white">
+                              {selectedFile.name}
+                            </p>
+                            <p className="text-caption text-gray-400">
+                              {(selectedFile.size / 1024).toFixed(1)} KB • Click to replace
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <Paperclip className="w-8 h-8 text-gray-400" />
+                          <span className="text-body-sm text-gray-300 font-medium">
+                            Choose a PDF, DOCX, presentation, or dataset
+                          </span>
+                          <span className="text-caption text-gray-500">
+                            Supports PDF, DOC, DOCX, PPT, PPTX, TXT, CSV, JSON, ZIP
+                          </span>
+                        </>
+                      )}
+                    </label>
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="label-enhanced">Category</label>
@@ -545,10 +678,19 @@ export default function Resources() {
                 </button>
                 <button
                   type="submit"
-                  disabled={isSubmitting || !formTitle.trim() || !formUrl.trim()}
+                  disabled={
+                    isSubmitting ||
+                    !formTitle.trim() ||
+                    (resourceType === "url" && !formUrl.trim()) ||
+                    (resourceType === "file" && !selectedFile && !formUrl.trim())
+                  }
                   className="w-full btn-primary flex items-center justify-center gap-2"
                 >
-                  {isSubmitting ? "Adding..." : "Add Resource"}
+                  {isSubmitting
+                    ? isUploadingFile
+                      ? "Uploading File..."
+                      : "Adding..."
+                    : "Add Resource"}
                 </button>
               </div>
             </form>
