@@ -72,6 +72,13 @@ const PRESET_GRADIENTS = [
   "from-cyan-500 via-blue-600 to-indigo-700",
 ];
 
+const getApiUrl = (endpoint: string) => {
+  const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+  const normalizedBase = base.endsWith("/api") ? base : `${base}/api`;
+  const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  return `${normalizedBase}${cleanEndpoint}`;
+};
+
 export default function Showcase() {
   const { currentUser } = useAppContext();
   const [projects, setProjects] = useState<ProjectItem[]>([]);
@@ -104,7 +111,7 @@ export default function Showcase() {
       const headers: Record<string, string> = { "Content-Type": "application/json" };
       if (token) headers["Authorization"] = `Bearer ${token}`;
 
-      let url = "/api/projects";
+      let url = getApiUrl("/projects");
       const params = new URLSearchParams();
       if (selectedCategory !== "All") params.append("category", selectedCategory);
       if (searchQuery.trim()) params.append("search", searchQuery.trim());
@@ -226,7 +233,7 @@ export default function Showcase() {
     );
 
     try {
-      await fetch(`/api/projects/${projectId}/like`, {
+      await fetch(getApiUrl(`/projects/${projectId}/like`), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -252,7 +259,7 @@ export default function Showcase() {
     );
 
     try {
-      await fetch(`/api/projects/${projectId}/bookmark`, {
+      await fetch(getApiUrl(`/projects/${projectId}/bookmark`), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -318,7 +325,7 @@ export default function Showcase() {
         members: memberArray.length > 0 ? memberArray : [{ name: authorName, role: "Lead Developer" }],
       };
 
-      const res = await fetch("/api/projects", {
+      const res = await fetch(getApiUrl("/projects"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
