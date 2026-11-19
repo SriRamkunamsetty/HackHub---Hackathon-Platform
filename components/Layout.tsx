@@ -2,6 +2,7 @@ import React, { ReactNode, useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { useAppContext } from "../context/AppContext";
+import NotificationCenter from "./NotificationCenter";
 import {
   LayoutDashboard,
   CheckSquare,
@@ -126,8 +127,22 @@ const Layout = ({ children }: LayoutProps) => {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-8">{children}</main>
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Top Header */}
+        <header className="h-16 border-b border-gray-700/50 bg-[#0f172a]/40 backdrop-blur-md px-8 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+              Live Workspace
+            </span>
+          </div>
+          <div className="flex items-center gap-4">
+            <NotificationCenter />
+          </div>
+        </header>
+
+        <main className="flex-1 overflow-y-auto p-8">{children}</main>
+      </div>
     </div>
   );
 };
