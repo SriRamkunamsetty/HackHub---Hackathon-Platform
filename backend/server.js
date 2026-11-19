@@ -13,6 +13,9 @@ const askGeminiRoute = require("./routes/askGeminiRoute.js");
 const fileRoutes = require("./routes/fileRoute.js");
 const chatRoute = require("./routes/chatRoute.js");
 
+const mentorRoute = require("./routes/mentorRoute.js");
+const hackathonRoute = require("./routes/hackathonRoute.js");
+
 const app = express();
 const server = http.createServer(app);
 
@@ -84,6 +87,9 @@ app.use("/api/tasks", taskRoute);
 app.use("/api/gemini", askGeminiRoute);
 app.use("/api/files", fileRoutes);
 app.use("/api/chat", chatRoute);
+
+app.use("/api/mentors", mentorRoute);
+app.use("/api/hackathons", hackathonRoute);
 
 // ✅ Start server
 const PORT = process.env.PORT || 5000;

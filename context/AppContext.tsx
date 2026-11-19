@@ -165,7 +165,39 @@ export const AppProvider = ({ children }: AppProviderProps) => {
       }
     }
   }, [isAuthenticated, isInitialized]);
+  // ------------------- Load team from backend -------------------
+  useEffect(() => {
+    if (!isAuthenticated || typeof window === "undefined") return;
 
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    const API_URL =
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+
+    fetch(`${API_URL}/teams/myteam`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!data || !data.team) return;
+
+        setTeamName(data.team.name);
+        setTeamMembers(
+          data.team.members
+            .filter((m: any) => m.user)
+            .map((m: any) => ({
+              id: m.user._id,
+              name: m.user.name,
+              role: m.role,
+              avatar: `https://placehold.co/40x40/38bdf8/ffffff?text=${m.user.name
+                .charAt(0)
+                .toUpperCase()}`,
+            }))
+        );
+      })
+      .catch((err) => console.error("Failed to load team:", err));
+  }, [isAuthenticated]);
   // ------------------- Hackathon Timer Persistence -------------------
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -214,9 +246,11 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     }
   };
 
-  const logout = () => {
+    const logout = () => {
     setIsAuthenticated(false);
     setCurrentUser(null);
+    setTeamName("My Team");
+    setTeamMembers([]);
 
     if (typeof window !== "undefined") {
       localStorage.removeItem("isAuthenticated");
