@@ -12,6 +12,7 @@ import {
   Users,
   LogOut,
   Rocket,
+  Compass,
 } from "lucide-react";
 
 interface LayoutProps {
@@ -50,6 +51,7 @@ const Layout = ({ children }: LayoutProps) => {
     { name: "Files", href: "/files", icon: FileText },
     { name: "Pitch", href: "/pitch", icon: Mic },
     { name: "Team", href: "/team", icon: Users },
+    { name: "Hackathons", href: "/hackathons", icon: Compass },
   ];
 
   const handleLogout = () => {
@@ -128,20 +130,20 @@ const Layout = ({ children }: LayoutProps) => {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         {/* Top Header */}
-        <header className="h-16 border-b border-gray-700/50 bg-[#0f172a]/40 backdrop-blur-md px-8 flex items-center justify-between shrink-0">
+        <header className="h-16 border-b border-gray-700/50 bg-[#0f172a]/40 backdrop-blur-md px-8 flex items-center justify-between shrink-0 relative z-50">
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
               Live Workspace
             </span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 relative z-50">
             <NotificationCenter />
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-8">{children}</main>
+        <main className="flex-1 overflow-y-auto p-8 relative z-0">{children}</main>
       </div>
     </div>
   );
