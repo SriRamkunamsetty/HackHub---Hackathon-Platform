@@ -11,6 +11,7 @@ import {
   Users,
   LogOut,
   Rocket,
+  Compass,
   Award,
 } from "lucide-react";
 
@@ -50,6 +51,7 @@ const Layout = ({ children }: LayoutProps) => {
     { name: "Files", href: "/files", icon: FileText },
     { name: "Pitch", href: "/pitch", icon: Mic },
     { name: "Team", href: "/team", icon: Users },
+    { name: "Hackathons", href: "/hackathons", icon: Compass },
     { name: "Achievements", href: "/achievements", icon: Award },
   ];
 
