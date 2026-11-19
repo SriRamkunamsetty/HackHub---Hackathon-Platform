@@ -56,26 +56,42 @@ export default function TeamSetup() {
   };
 
   // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Update team name
-      updateTeamName(teamName);
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+      const token = localStorage.getItem("token");
 
-      // Update team bio
+      // Save the team in the backend (MongoDB)
+      const res = await fetch(`${API_URL}/teams`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: teamName }),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text);
+      }
+
+      const data = await res.json();
+
+      // Update local state (same as before)
+      updateTeamName(teamName);
       updateTeamBio(teamBio);
 
-      // Update deadline
       if (deadline) {
         updateDeadline(new Date(deadline));
       }
 
-      // Add team members
       members.forEach((member) => {
         if (member.name && member.role) {
-          // Create a simple avatar based on first letter of name
           const firstLetter = member.name.charAt(0).toUpperCase();
           const avatar = `https://placehold.co/40x40/38bdf8/ffffff?text=${firstLetter}`;
 
@@ -87,16 +103,12 @@ export default function TeamSetup() {
         }
       });
 
-      // Generate a random invite code
-      const generatedCode = `HACK-${Math.random()
-        .toString(36)
-        .substring(2, 6)
-        .toUpperCase()}`;
-      setInviteCode(generatedCode);
-
+      // Use the REAL invite code from the backend
+      setInviteCode(data.team.inviteCode);
       setSuccess(true);
     } catch (error) {
       console.error("Error setting up team:", error);
+      alert("Could not create the team. Please try again.");
     } finally {
       setLoading(false);
     }

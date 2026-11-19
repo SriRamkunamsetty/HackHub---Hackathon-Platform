@@ -11,6 +11,9 @@ const taskRoute = require("./routes/taskRoute.js");
 const askGeminiRoute = require("./routes/askGeminiRoute.js");
 const fileRoutes = require("./routes/fileRoute.js");
 
+const mentorRoute = require("./routes/mentorRoute.js");
+const hackathonRoute = require("./routes/hackathonRoute.js");
+
 const app = express();
 
 // ✅ CORS setup (allow frontend localhost)
@@ -43,6 +46,9 @@ app.use("/api/teams", teamRoute);
 app.use("/api/tasks", taskRoute);
 app.use("/api/gemini", askGeminiRoute);
 app.use("/api/files", fileRoutes);
+
+app.use("/api/mentors", mentorRoute);
+app.use("/api/hackathons", hackathonRoute);
 
 // ✅ Start server
 const PORT = process.env.PORT || 5000;
