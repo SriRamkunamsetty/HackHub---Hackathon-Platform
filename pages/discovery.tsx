@@ -88,6 +88,13 @@ const POPULAR_SKILLS = [
   "MongoDB",
 ];
 
+const getApiUrl = (endpoint: string) => {
+  const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+  const normalizedBase = base.endsWith("/api") ? base : `${base}/api`;
+  const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  return `${normalizedBase}${cleanEndpoint}`;
+};
+
 export default function Discovery() {
   const { currentUser } = useAppContext();
   const [posts, setPosts] = useState<TeamRecruitmentItem[]>([]);
@@ -120,7 +127,7 @@ export default function Discovery() {
   const fetchPosts = async () => {
     try {
       setLoading(true);
-      let url = "/api/discovery";
+      let url = getApiUrl("/discovery");
       const params = new URLSearchParams();
       if (selectedDomain !== "All") params.append("domain", selectedDomain);
       if (selectedSkill !== "All") params.append("skill", selectedSkill);
@@ -242,7 +249,7 @@ export default function Discovery() {
           .filter(Boolean),
       };
 
-      const res = await fetch(`/api/discovery/${applyingPost._id}/request`, {
+      const res = await fetch(getApiUrl(`/discovery/${applyingPost._id}/request`), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -284,7 +291,7 @@ export default function Discovery() {
   ) => {
     try {
       const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-      const res = await fetch(`/api/discovery/${postId}/requests/${requestId}`, {
+      const res = await fetch(getApiUrl(`/discovery/${postId}/requests/${requestId}`), {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -350,7 +357,7 @@ export default function Discovery() {
         maxMembers: postMaxMembers,
       };
 
-      const res = await fetch("/api/discovery", {
+      const res = await fetch(getApiUrl("/discovery"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
