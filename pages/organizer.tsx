@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Layout from "../components/Layout";
 import {
   Calendar,
@@ -46,12 +46,28 @@ export default function OrganizerPage() {
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000").replace(/\/api\/?$/, "");
+
   // Form State
   const [title, setTitle] = useState("");
   const [tagline, setTagline] = useState("");
   const [description, setDescription] = useState("");
   const [prizePool, setPrizePool] = useState("$10,000");
   const [tracksText, setTracksText] = useState("AI & ML, Web3, FinTech, Open Track");
+
+  const totalPrizePool = useMemo(() => {
+    if (!events || !events.length) return "$0";
+    let sum = 0;
+    for (const e of events) {
+      if (typeof e.prizePool === "string") {
+        const num = parseFloat(e.prizePool.replace(/[^0-9.]/g, ""));
+        if (!isNaN(num)) sum += num;
+      } else if (typeof e.prizePool === "number") {
+        sum += e.prizePool;
+      }
+    }
+    return `$${sum.toLocaleString()}`;
+  }, [events]);
 
   useEffect(() => {
     fetchEvents();
@@ -60,7 +76,7 @@ export default function OrganizerPage() {
   const fetchEvents = async () => {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:5000/api/organizer/hackathons");
+      const res = await fetch(`${API_BASE}/api/organizer/hackathons`);
       if (res.ok) {
         const data = await res.json();
         setEvents(data);
@@ -113,7 +129,7 @@ export default function OrganizerPage() {
     };
 
     try {
-      const res = await fetch("http://localhost:5000/api/organizer/hackathons", {
+      const res = await fetch(`${API_BASE}/api/organizer/hackathons`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newHackathon),
@@ -199,7 +215,7 @@ export default function OrganizerPage() {
             <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
               Total Prize Pool
             </span>
-            <p className="text-3xl font-extrabold text-emerald-400 mt-2">$25,000</p>
+            <p className="text-3xl font-extrabold text-emerald-400 mt-2">{totalPrizePool}</p>
             <p className="text-xs text-emerald-400/80 mt-1">Across all tracks</p>
           </div>
         </div>
