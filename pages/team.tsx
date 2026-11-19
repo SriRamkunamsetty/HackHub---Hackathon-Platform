@@ -35,6 +35,13 @@ interface TeamMemberItem {
   joinedAt?: string;
 }
 
+const getApiUrl = (endpoint: string) => {
+  const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+  const normalizedBase = base.endsWith("/api") ? base : `${base}/api`;
+  const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  return `${normalizedBase}${cleanEndpoint}`;
+};
+
 export default function Team() {
   const { currentUser } = useAppContext();
   const [loading, setLoading] = useState(true);
@@ -66,7 +73,7 @@ export default function Team() {
     try {
       setLoading(true);
       const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-      const res = await fetch("/api/teams/myteam", {
+      const res = await fetch(getApiUrl("/teams/myteam"), {
         headers: {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -164,7 +171,7 @@ export default function Team() {
     if (!isLeader) return;
     try {
       const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-      const res = await fetch("/api/teams/invite-code", {
+      const res = await fetch(getApiUrl("/teams/invite-code"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -199,7 +206,7 @@ export default function Team() {
     try {
       setIsSavingProfile(true);
       const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-      const res = await fetch("/api/teams/profile", {
+      const res = await fetch(getApiUrl("/teams/profile"), {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -237,7 +244,7 @@ export default function Team() {
       const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
       const targetUserId = selectedMember.user?._id || "u-target";
 
-      const res = await fetch(`/api/teams/members/${targetUserId}/role`, {
+      const res = await fetch(getApiUrl(`/teams/members/${targetUserId}/role`), {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -278,7 +285,7 @@ export default function Team() {
         const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
         const targetUserId = member.user?._id;
 
-        await fetch(`/api/teams/members/${targetUserId}`, {
+        await fetch(getApiUrl(`/teams/members/${targetUserId}`), {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
@@ -303,7 +310,7 @@ export default function Team() {
     if (confirm("Are you sure you want to leave this team?")) {
       try {
         const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-        const res = await fetch("/api/teams/leave", {
+        const res = await fetch(getApiUrl("/teams/leave"), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
