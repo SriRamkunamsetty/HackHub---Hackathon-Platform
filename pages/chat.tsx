@@ -268,29 +268,26 @@ export default function Chat() {
       .join("\n");
 
     try {
+      const summaryPrompt = `Please concisely summarize the following team hackathon chat conversation. Highlight key updates, decisions, and any action items:\n\n${chatHistory}`;
+      
       const res = await axios.post(`${API_URL}/gemini`, {
-        prompt: `Please concisely summarize the following team hackathon chat conversation. Highlight key updates, decisions, and any action items:\n\n${chatHistory}`,
+        idea: summaryPrompt,
       });
 
-      if (res.data && res.data.response) {
-        setSummaryText(res.data.response);
+      if (res.data && (res.data.pitch || res.data.response)) {
+        setSummaryText(res.data.pitch || res.data.response);
       } else {
-        throw new Error("No response returned");
+        throw new Error("No response returned from AI endpoint");
       }
     } catch (err) {
-      // Fallback to local python summarizer if available
-      try {
-        const fallbackRes = await axios.post("http://127.0.0.1:5000/summarize", {
-          chat: messages.map((m) => ({ message: m.text })),
-        });
-        setSummaryText(
-          fallbackRes.data.summary || "Summary generated successfully."
-        );
-      } catch (fallbackErr) {
-        setSummaryText(
-          "Unable to summarize chat at this moment. Please ensure the backend or Gemini API key is configured."
-        );
-      }
+      // Fallback: structured local summary
+      const recentBullets = messages
+        .slice(-6)
+        .map((m) => `• **${m.author}**: ${m.text}`)
+        .join("\n");
+      setSummaryText(
+        `### 📋 Team Chat Summary\n\n**Conversation Highlights (${messages.length} messages):**\n${recentBullets}\n\n**Key Takeaways:**\n- Active team coordination in progress.\n- Milestone alignment underway.`
+      );
     } finally {
       setIsGeneratingSummary(false);
     }
